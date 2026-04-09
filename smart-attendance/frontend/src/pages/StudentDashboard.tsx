@@ -4,6 +4,7 @@ import { Routes, Route } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { attendanceApi, aiApi } from "../services/api";
 import { AttendanceStats, AttendanceRecord, AIReport } from "../types";
+import ScannerModal from "../components/ScannerModal";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from "recharts";
@@ -296,12 +297,37 @@ const AIReportPage: React.FC = () => {
   );
 };
 
-const StudentDashboard: React.FC = () => (
-  <Routes>
-    <Route path="/" element={<Overview />} />
-    <Route path="/attendance" element={<AttendancePage />} />
-    <Route path="/report" element={<AIReportPage />} />
-  </Routes>
-);
+const StudentDashboard: React.FC = () => {
+  const [showScanner, setShowScanner] = useState(false);
+
+  return (
+    <>
+      <Routes>
+        <Route path="/" element={<Overview />} />
+        <Route path="/attendance" element={<AttendancePage />} />
+        <Route path="/report" element={<AIReportPage />} />
+      </Routes>
+
+      <button 
+        className="scan-btn-fab" 
+        onClick={() => setShowScanner(true)}
+        title="Scan Attendance"
+      >
+        📷
+      </button>
+
+      {showScanner && (
+        <ScannerModal 
+          onClose={() => setShowScanner(false)} 
+          onSuccess={(record) => {
+            console.log("Attendance marked:", record);
+            // Optionally refresh stats or history here
+            window.location.reload(); // Simple refresh to show new attendance
+          }} 
+        />
+      )}
+    </>
+  );
+};
 
 export default StudentDashboard;
