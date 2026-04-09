@@ -1,0 +1,76 @@
+// firebase/firestore.rules
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ──────────────────────────────────────────────────────
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function getUserRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'admin';
+    }
+
+    function isFaculty() {
+      return isAuthenticated() && (getUserRole() == 'faculty' || isAdmin());
+    }
+
+    // ── users ─────────────────────────────────────────────────────────────────
+    match /users/{userId} {
+      // Users can read/write their own document; admins can read all
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && request.auth.uid == userId;
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ── classes ───────────────────────────────────────────────────────────────
+    match /classes/{classId} {
+      // Any authenticated user can read classes (needed for student enrollment)
+      allow read: if isAuthenticated();
+      // Only faculty/admin can create, update, delete
+      allow create: if isFaculty();
+      allow update: if isFaculty() &&
+        (isAdmin() || resource.data.facultyId == request.auth.uid);
+      allow delete: if isFaculty() &&
+        (isAdmin() || resource.data.facultyId == request.auth.uid);
+    }
+
+    // ── students (enrollment records) ─────────────────────────────────────────
+    match /students/{enrollmentId} {
+      allow read: if isAuthenticated();
+      allow create: if isFaculty() || isOwner(request.resource.data.userId);
+      allow delete: if isAdmin();
+    }
+
+    // ── sessions ──────────────────────────────────────────────────────────────
+    match /sessions/{sessionId} {
+      allow read: if isAuthenticated();
+      allow create: if isFaculty();
+      allow update: if isFaculty();
+      allow delete: if isAdmin();
+    }
+
+    // ── attendance ────────────────────────────────────────────────────────────
+    match /attendance/{recordId} {
+      // Students can only read their own records; faculty can read all for their classes
+      allow read: if isAuthenticated() &&
+        (resource.data.studentId == request.auth.uid || isFaculty());
+      // Students can mark their own attendance (QR scan); faculty can mark manually
+      allow create: if isAuthenticated() &&
+        (request.resource.data.studentId == request.auth.uid || isFaculty());
+      allow update: if isFaculty();
+      allow delete: if isAdmin();
+    }
+  }
+}

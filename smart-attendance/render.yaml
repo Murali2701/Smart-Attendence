@@ -1,0 +1,17 @@
+# render.yaml – Deploy Spring Boot backend to Render.com
+# Place this file in the repo root and connect the repo to Render
+
+services:
+  - type: web
+    name: smart-attendance-backend
+    env: java
+    plan: free
+    buildCommand: cd backend && mvn clean package -DskipTests
+    startCommand: java -jar backend/target/smart-attendance-1.0.0.jar
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false          # Set manually in Render dashboard
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+    healthCheckPath: /actuator/health
+    autoDeploy: true
