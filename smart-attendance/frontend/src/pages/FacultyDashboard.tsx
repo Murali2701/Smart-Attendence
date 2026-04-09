@@ -1,5 +1,5 @@
 // frontend/src/pages/FacultyDashboard.tsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Routes, Route } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { classesApi, sessionsApi, attendanceApi } from "../services/api";
@@ -52,7 +52,7 @@ const ClassesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
-  const load = () => {
+  const load = useCallback(() => {
     if (!userProfile) return;
     classesApi.getByFaculty(userProfile.id)
       .then(r => setClasses(r.data))
@@ -63,9 +63,9 @@ const ClassesPage: React.FC = () => {
         ]);
       })
       .finally(() => setLoading(false));
-  };
+  }, [userProfile]);
 
-  useEffect(() => { load(); }, [userProfile]);
+  useEffect(() => { load(); }, [load]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -139,7 +139,6 @@ const SessionsPage: React.FC = () => {
   const [classes, setClasses] = useState<Class[]>([]);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedClass, setSelectedClass] = useState("");
-  const [activeSession, setActiveSession] = useState<Session | null>(null);
   const [qrSession, setQrSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
@@ -177,7 +176,6 @@ const SessionsPage: React.FC = () => {
   const startSession = async () => {
     try {
       const res = await sessionsApi.create(selectedClass);
-      setActiveSession(res.data);
       setQrSession(res.data);
     } catch {
       const demo: Session = {
@@ -189,7 +187,6 @@ const SessionsPage: React.FC = () => {
         expiresAt: new Date(Date.now() + 15 * 60000).toISOString(),
         status: "active",
       };
-      setActiveSession(demo);
       setQrSession(demo);
       setSessions(prev => [demo, ...prev]);
     }

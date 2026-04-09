@@ -1,7 +1,6 @@
 // frontend/src/pages/AdminDashboard.tsx
 import React, { useState, useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
-import { useAuth } from "../hooks/useAuth";
 import { adminApi } from "../services/api";
 import { User, AnalyticsSummary } from "../types";
 import {

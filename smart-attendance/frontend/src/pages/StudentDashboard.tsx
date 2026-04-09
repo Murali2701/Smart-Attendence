@@ -1,12 +1,11 @@
 // frontend/src/pages/StudentDashboard.tsx
 import React, { useState, useEffect } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { attendanceApi, aiApi } from "../services/api";
 import { AttendanceStats, AttendanceRecord, AIReport } from "../types";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  BarChart, Bar, Cell,
 } from "recharts";
 
 const AttendanceRing: React.FC<{ pct: number; size?: number }> = ({ pct, size = 80 }) => {
